@@ -1,0 +1,482 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.header{padding:1.5rem 0 1rem;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1.5rem}
+.header h1{font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.header p{font-size:13px;color:var(--color-text-secondary)}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem}
+.meta-field label{display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.meta-field input{width:100%;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:10px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:1.5rem;font-size:12px;color:var(--color-text-secondary)}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-c{background:#639922}.dot-nc{background:#E24B4A}.dot-na{background:#888780}
+.zone-block{margin-bottom:1.5rem;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.zone-header{padding:10px 16px;background:var(--color-background-secondary);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.zone-header h2{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.zone-badge{font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px}
+.zone-badge .score{font-weight:500;color:var(--color-text-primary)}
+.chevron{font-size:16px;color:var(--color-text-tertiary);transition:transform .2s}
+.chevron.open{transform:rotate(180deg)}
+.zone-body{display:none;padding:0}
+.zone-body.open{display:block}
+.criterion{display:grid;grid-template-columns:36px 1fr 100px;gap:8px;align-items:start;padding:10px 14px;border-top:0.5px solid var(--color-border-tertiary)}
+.criterion:first-child{border-top:none}
+.ref{font-size:11px;font-weight:500;color:var(--color-text-secondary);padding-top:2px}
+.label-text{font-size:13px;color:var(--color-text-primary);line-height:1.5}
+.radio-group{display:flex;gap:4px;justify-content:flex-end}
+.radio-btn{padding:4px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:var(--color-text-secondary);transition:all .15s}
+.radio-btn:hover{background:var(--color-background-secondary)}
+.radio-btn.sel-C{background:#EAF3DE;color:#3B6D11;border-color:#97C459}
+.radio-btn.sel-NC{background:#FCEBEB;color:#A32D2D;border-color:#F09595}
+.radio-btn.sel-NA{background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)}
+.obs-row{grid-column:2/-1;padding:0 14px 10px 0;padding-left:0}
+.obs-input{width:100%;padding:6px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:12px;background:var(--color-background-primary);color:var(--color-text-primary);resize:none}
+.obs-input:focus{outline:none;border-color:var(--color-border-info)}
+.dashboard{margin-bottom:1.5rem;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;text-align:center}
+.metric-val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.metric-val.green{color:#3B6D11}
+.metric-val.red{color:#A32D2D}
+.metric-val.amber{color:#854F0B}
+.metric-label{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.progress-bar-wrap{margin-bottom:1.5rem}
+.progress-bar-bg{height:8px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:4px;transition:width .4s,background .4s;background:#E24B4A}
+.progress-bar-fill.ok{background:#639922}
+.progress-bar-fill.warn{background:#EF9F27}
+.progress-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;display:flex;justify-content:space-between}
+.btn-row{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.btn{padding:8px 18px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:13px;cursor:pointer;background:transparent;color:var(--color-text-primary)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.btn-primary:hover{opacity:.85}
+.synthesis{margin-bottom:1.5rem;padding:16px;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);display:none}
+.synthesis.visible{display:block}
+.synthesis h3{font-size:14px;font-weight:500;margin-bottom:12px;color:var(--color-text-primary)}
+.synth-section{margin-bottom:12px}
+.synth-section h4{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.synth-item{font-size:13px;color:var(--color-text-primary);padding:6px 10px;border-left:2px solid var(--color-border-secondary);margin-bottom:4px;background:var(--color-background-primary);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0}
+.synth-item.nc1{border-left-color:#E24B4A}
+.synth-item.nc2{border-left-color:#EF9F27}
+.synth-item.ok{border-left-color:#639922}
+.export-area{margin-top:1rem}
+.export-text{width:100%;padding:10px;font-size:11px;font-family:var(--font-mono);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);color:var(--color-text-secondary);resize:none;display:none}
+.export-text.visible{display:block}
+</style>
+
+<div class="header">
+  <h1>Grille d'audit interne BPH — Ets Lefeuvre</h1>
+  <p>EL-QUA-001 V2.0 — Rédacteur : Steven ASSOGBA — Validé par : M. Philippe WERLER</p>
+</div>
+
+<div class="meta-grid">
+  <div class="meta-field"><label>Date de l'audit</label><input type="date" id="date-audit"></div>
+  <div class="meta-field"><label>Zone auditée</label><input type="text" id="zone-auditee" placeholder="Ex : Atelier de production"></div>
+  <div class="meta-field"><label>Auditeur</label><input type="text" id="auditeur" value="Kossi E. Steve ASSOGBA"></div>
+  <div class="meta-field"><label>Personnes présentes</label><input type="text" id="personnes" placeholder="Noms des personnes présentes"></div>
+</div>
+
+<div class="legend">
+  <span><span class="dot dot-c"></span>C = Conforme</span>
+  <span><span class="dot dot-nc"></span>NC = Non conforme</span>
+  <span><span class="dot dot-na"></span>NA = Non applicable</span>
+  <span>🔴 Priorité 1 — Sécurité immédiate &nbsp;|&nbsp; 🟠 Priorité 2 — Risque potentiel &nbsp;|&nbsp; ⚫ Priorité 3 — Amélioration</span>
+</div>
+
+<div class="dashboard">
+  <div class="metric"><div class="metric-val" id="d-total">0</div><div class="metric-label">Critères évalués</div></div>
+  <div class="metric"><div class="metric-val green" id="d-c">0</div><div class="metric-label">Conformes</div></div>
+  <div class="metric"><div class="metric-val red" id="d-nc">0</div><div class="metric-label">Non conformes</div></div>
+  <div class="metric"><div class="metric-val amber" id="d-pct">—</div><div class="metric-label">Taux de conformité</div></div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-label"><span>Progression de l'audit</span><span id="d-prog">0 / 110 critères</span></div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<div id="zones-container"></div>
+
+<div class="btn-row">
+  <button class="btn btn-primary" onclick="genSynthesis()">Générer la synthèse ↗</button>
+  <button class="btn" onclick="exportAudit()">Exporter les résultats</button>
+  <button class="btn" onclick="resetAll()">Réinitialiser</button>
+</div>
+
+<div class="synthesis" id="synthesis-block">
+  <h3>Synthèse de l'audit — <span id="synth-date"></span></h3>
+  <div id="synth-content"></div>
+</div>
+
+<div class="export-area">
+  <textarea class="export-text" id="export-text" rows="12" readonly></textarea>
+</div>
+
+<script>
+const zones=[
+  {id:1,label:"Zone 1 — Personnel et hygiène corporelle",criteria:[
+    {ref:"1.1",p:1,text:"Port de la blouse ou tenue de travail complète et propre dès l'entrée en atelier"},
+    {ref:"1.2",p:1,text:"Port de la coiffe (charlotte) couvrant l'intégralité des cheveux"},
+    {ref:"1.3",p:1,text:"Port du cache-barbe ou cache-nez pour les opérateurs concernés"},
+    {ref:"1.4",p:1,text:"Lavage des mains systématique à l'entrée de l'atelier et après chaque interruption"},
+    {ref:"1.5",p:1,text:"Absence de bijoux : bagues, bracelets, montres, piercings, boucles d'oreilles"},
+    {ref:"1.6",p:2,text:"Absence de vernis à ongles, faux ongles ou ongles longs"},
+    {ref:"1.7",p:1,text:"Absence de plaies non protégées : pansement bleu détectable obligatoire sur toute blessure"},
+    {ref:"1.8",p:1,text:"Pas de nourriture, boissons ou médicaments sur les postes de travail ou en atelier"},
+    {ref:"1.9",p:1,text:"Pas de téléphone portable utilisé en atelier pendant la production"},
+    {ref:"1.10",p:1,text:"Pas de comportement contraire à l'hygiène : manger, cracher, éternuer sans protection"},
+    {ref:"1.11",p:2,text:"Tenues de travail propres : pas de taches, déchirures ou tenues portées hors de l'atelier"},
+  ]},
+  {id:2,label:"Zone 2 — Stockage des matières premières",criteria:[
+    {ref:"2.1",p:2,text:"Matières premières stockées sur palettes ou étagères : jamais à même le sol"},
+    {ref:"2.2",p:1,text:"Identification claire de chaque matière première : étiquette lisible, référence, numéro de lot, DLC"},
+    {ref:"2.3",p:1,text:"Séparation physique visible entre farine froment BIO et farine froment conventionnelle"},
+    {ref:"2.4",p:1,text:"Séparation physique visible entre galettes BIO et produits conventionnels"},
+    {ref:"2.5",p:1,text:"Absence de matières premières périmées ou sans DLC visible en stock"},
+    {ref:"2.6",p:2,text:"Propreté générale de la zone : sols, murs, étagères sans résidus ni poussière"},
+    {ref:"2.7",p:1,text:"Absence de nuisibles ou de traces de nuisibles (rongeurs, insectes, déjections)"},
+    {ref:"2.8",p:1,text:"Absence d'humidité ou de moisissures dans la zone de stockage"},
+    {ref:"2.9",p:2,text:"Sacs entamés correctement refermés et identifiés avec date d'ouverture"},
+    {ref:"2.10",p:2,text:"Principe FIFO respecté : les lots les plus anciens sont utilisés en premier"},
+  ]},
+  {id:3,label:"Zone 3 — Réfrigérateur œufs liquides et levure",criteria:[
+    {ref:"3.1",p:1,text:"Température intérieure du réfrigérateur conforme : inférieure ou égale à 4°C"},
+    {ref:"3.2",p:1,text:"Relevé de température réalisé et enregistré : fréquence respectée"},
+    {ref:"3.3",p:1,text:"DLC des œufs liquides vérifiée : absence de produits périmés"},
+    {ref:"3.4",p:1,text:"DLC de la levure vérifiée : absence de produits périmés"},
+    {ref:"3.5",p:1,text:"Séparation entre les œufs liquides et la levure : pas de contact entre les deux produits"},
+    {ref:"3.6",p:1,text:"Numéros de lot des œufs liquides et levure enregistrés à chaque utilisation"},
+    {ref:"3.7",p:2,text:"Propreté intérieure du réfrigérateur : étagères, parois, joints de porte propres"},
+    {ref:"3.8",p:2,text:"Joint de porte en bon état : pas de fissures ni de moisissures sur le joint"},
+    {ref:"3.9",p:2,text:"Porte du réfrigérateur fermée quand non utilisée : pas laissée ouverte"},
+  ]},
+  {id:4,label:"Zone 4 — Atelier de préparation des pâtes (2 pâteuses, 5 bacs)",criteria:[
+    {ref:"4.1",p:1,text:"Pâteuses nettoyées et désinfectées avant utilisation : absence de résidus de pâte précédente"},
+    {ref:"4.2",p:1,text:"Nettoyage réalisé entre une production BIO et une production conventionnelle"},
+    {ref:"4.3",p:2,text:"État général des pâteuses : absence de rouille, de pièces abîmées ou de surfaces dégradées"},
+    {ref:"4.4",p:1,text:"Pesée des ingrédients réalisée sur balance : pas de dosage à l'estimation"},
+    {ref:"4.5",p:1,text:"Balance calibrée et vérifiée régulièrement"},
+    {ref:"4.6",p:1,text:"Numéros de lot et quantités de chaque ingrédient enregistrés sur la fiche de production"},
+    {ref:"4.7",p:1,text:"Les 5 bacs en cours d'utilisation sont identifiés : nom du produit, date, numéro de lot"},
+    {ref:"4.8",p:2,text:"Les 5 bacs sont couverts quand ils ne sont pas en cours d'utilisation"},
+    {ref:"4.9",p:1,text:"Propreté des bacs avant remplissage : absence de résidus de pâte ancienne"},
+    {ref:"4.10",p:2,text:"Propreté générale de la zone de préparation : plans de travail, sols, murs"},
+  ]},
+  {id:5,label:"Zone 5 — Atelier de production (2 lignes automatiques)",criteria:[
+    {ref:"5.1",p:2,text:"Propreté des plaques de cuisson des deux lignes : absence de résidus carbonisés ou de pâte brûlée"},
+    {ref:"5.2",p:2,text:"État des plaques de cuisson : pas de fissures, dégradations ou surfaces abîmées"},
+    {ref:"5.3",p:3,text:"Propreté des zones de réglage et de commande des deux lignes"},
+    {ref:"5.4",p:1,text:"Flux de production respecté : pas de croisement entre matières premières et produits finis"},
+    {ref:"5.5",p:1,text:"Opérateurs en tenue complète sur les lignes : blouse, coiffe, pas de bijoux"},
+    {ref:"5.6",p:1,text:"Pas de manipulation de téléphone portable pendant la production sur les lignes"},
+    {ref:"5.7",p:1,text:"Récupération des produits en sortie de ligne avec des gestes propres"},
+    {ref:"5.8",p:2,text:"Produits non conformes (cassés, déchirés, mal formés) isolés et comptabilisés"},
+    {ref:"5.9",p:1,text:"Enregistrement de la production réalisé sur la tablette : numéro de lot, quantités, heure"},
+    {ref:"5.10",p:2,text:"Nettoyage entre les productions de deux références différentes"},
+    {ref:"5.11",p:1,text:"Nettoyage entre production BIO et production conventionnelle sur la même ligne"},
+    {ref:"5.12",p:2,text:"Propreté des sols autour des lignes : absence de résidus de pâte ou de produits tombés"},
+  ]},
+  {id:6,label:"Zone 6 — Zone de refroidissement",criteria:[
+    {ref:"6.1",p:1,text:"Les produits refroidissent dans une zone propre et protégée des contaminations extérieures"},
+    {ref:"6.2",p:1,text:"Durée de refroidissement maîtrisée : les produits ne restent pas trop longtemps à température ambiante"},
+    {ref:"6.3",p:2,text:"Séparation entre la zone de refroidissement et la zone de cuisson chaude"},
+    {ref:"6.4",p:2,text:"Propreté des supports ou grilles de refroidissement : absence de résidus"},
+    {ref:"6.5",p:1,text:"Absence de contamination croisée dans cette zone : produits BIO séparés des conventionnels"},
+    {ref:"6.6",p:2,text:"Température ambiante de la zone de refroidissement maîtrisée"},
+  ]},
+  {id:7,label:"Zone 7 — Stockage des barquettes (2 grands bacs)",criteria:[
+    {ref:"7.1",p:1,text:"Les 2 grands bacs de stockage des barquettes sont couverts ou protégés : absence de débris tombant dedans"},
+    {ref:"7.2",p:1,text:"Absence de débris de production dans les bacs de barquettes : résidus de pâte, farine, fragments"},
+    {ref:"7.3",p:1,text:"Les barquettes dans les bacs ne sont pas exposées aux projections des lignes de production"},
+    {ref:"7.4",p:2,text:"Les barquettes dans les bacs sont dans leur emballage d'origine ou protégées"},
+    {ref:"7.5",p:2,text:"Propreté des bacs eux-mêmes : intérieur et extérieur propres"},
+    {ref:"7.6",p:1,text:"Les barquettes abîmées ou souillées sont retirées et non utilisées"},
+    {ref:"7.7",p:2,text:"Rotation des barquettes — les plus anciennes sont utilisées en premier"},
+  ]},
+  {id:8,label:"Zone 8 — Conditionnement (operculeuse et stockage barquettes)",criteria:[
+    {ref:"8.1",p:2,text:"Barquettes stockées à côté de l'operculeuse dans leur emballage d'origine jusqu'à leur utilisation"},
+    {ref:"8.2",p:1,text:"Barquettes ne sont ouvertes qu'au dernier moment avant remplissage : pas de déballage anticipé"},
+    {ref:"8.3",p:2,text:"Zone autour de l'operculeuse propre : absence de résidus de film plastique, poussière, débris"},
+    {ref:"8.4",p:2,text:"Propreté de l'operculeuse : mâchoires, plateau, mécanismes de soudure propres"},
+    {ref:"8.5",p:1,text:"Contrôle du taux d'oxygène réalisé sur les barquettes selon procédure PR-QA-012"},
+    {ref:"8.6",p:1,text:"Résultats du contrôle taux O₂ enregistrés : taux ≤ 1,0 % ou action corrective déclenchée"},
+    {ref:"8.7",p:1,text:"Étiquetage des barquettes conforme : DLC ou DDM, numéro de lot, allergènes, nom du produit"},
+    {ref:"8.8",p:1,text:"Distinction DLC / DDM correctement appliquée sur les étiquettes"},
+    {ref:"8.9",p:1,text:"Film d'operculage en bon état : pas de soudure défectueuse, pas de barquette mal scellée"},
+    {ref:"8.10",p:2,text:"Barquettes défectueuses ou mal scellées retirées et éliminées"},
+  ]},
+  {id:9,label:"Zone 9 — Réfrigérateur de stockage produits finis",criteria:[
+    {ref:"9.1",p:1,text:"Température intérieure conforme : inférieure ou égale à 4°C (ou -18°C pour les surgelés)"},
+    {ref:"9.2",p:1,text:"Relevé de température réalisé et enregistré : minimum 2 fois par jour"},
+    {ref:"9.3",p:2,text:"Principe FIFO respecté : produits les plus anciens positionnés devant et utilisés en premier"},
+    {ref:"9.4",p:1,text:"Produits BIO séparés des produits conventionnels à l'intérieur du réfrigérateur"},
+    {ref:"9.5",p:1,text:"Tous les produits sont identifiés : étiquette lisible avec DLC et numéro de lot"},
+    {ref:"9.6",p:1,text:"Absence de produits périmés ou sans DLC identifiable dans le réfrigérateur"},
+    {ref:"9.7",p:2,text:"Propreté intérieure : sols, parois, étagères propres sans résidus"},
+    {ref:"9.8",p:2,text:"Joint de porte en bon état : pas de fissures ni de moisissures"},
+    {ref:"9.9",p:2,text:"Porte maintenue fermée quand le réfrigérateur n'est pas utilisé"},
+  ]},
+  {id:10,label:"Zone 10 — Stockage et préparation des cartons",criteria:[
+    {ref:"10.1",p:2,text:"Cartons stockés à l'abri de l'humidité : pas de cartons mouillés ou gondolés"},
+    {ref:"10.2",p:2,text:"Cartons surélevés : pas stockés à même le sol"},
+    {ref:"10.3",p:2,text:"Séparation entre cartons vides et cartons contenant des produits finis"},
+    {ref:"10.4",p:3,text:"Zone de préparation des cartons propre et organisée"},
+    {ref:"10.5",p:1,text:"Absence de nuisibles ou de traces de nuisibles dans la zone de stockage cartons"},
+  ]},
+  {id:11,label:"Zone 11 — Conteneur frigorifique extérieur",criteria:[
+    {ref:"11.1",p:1,text:"Température intérieure du conteneur conforme : inférieure ou égale à 4°C"},
+    {ref:"11.2",p:1,text:"Relevé de température du conteneur enregistré régulièrement"},
+    {ref:"11.3",p:2,text:"Propreté intérieure du conteneur : sols, parois, plafond sans résidus"},
+    {ref:"11.4",p:1,text:"Produits BIO séparés des produits conventionnels dans le conteneur"},
+    {ref:"11.5",p:1,text:"Tous les produits dans le conteneur sont identifiés : étiquette lisible, lot, DLC"},
+    {ref:"11.6",p:2,text:"Joint de porte du conteneur en bon état : pas de fissures, fermeture hermétique"},
+    {ref:"11.7",p:2,text:"Porte du conteneur maintenue fermée quand non utilisée"},
+    {ref:"11.8",p:2,text:"Organisation du conteneur respectant le FIFO : produits les plus anciens devant"},
+  ]},
+  {id:12,label:"Zone 12 — Camions de livraison frigorifiques (2 camions)",criteria:[
+    {ref:"12.1",p:1,text:"Température des camions vérifiée avant chargement : inférieure ou égale à 4°C"},
+    {ref:"12.2",p:1,text:"Température enregistrée avant chaque départ en livraison"},
+    {ref:"12.3",p:2,text:"Propreté intérieure des camions : sols, parois, plafond sans résidus alimentaires"},
+    {ref:"12.4",p:1,text:"Thermomètre fonctionnel présent dans chaque camion"},
+    {ref:"12.5",p:2,text:"État général des camions : absence de rouille, dégradations ou surfaces abîmées"},
+    {ref:"12.6",p:2,text:"Joint de porte des camions en bon état : fermeture hermétique vérifiée"},
+    {ref:"12.7",p:1,text:"Produits BIO et conventionnels séparés lors du chargement"},
+    {ref:"12.8",p:2,text:"Chargement organisé : produits stables, pas de risque de chute pendant le transport"},
+  ]},
+  {id:13,label:"Zone 13 — Nettoyage, désinfection et gestion des déchets",criteria:[
+    {ref:"13.1",p:1,text:"Plan de nettoyage et désinfection disponible et affiché ou accessible"},
+    {ref:"13.2",p:1,text:"Fréquences de nettoyage respectées (enregistrements complétés)"},
+    {ref:"13.3",p:1,text:"Produits de nettoyage et désinfection stockés séparément des matières premières alimentaires"},
+    {ref:"13.4",p:2,text:"Produits de nettoyage étiquetés et fiches de données de sécurité disponibles"},
+    {ref:"13.5",p:2,text:"Matériel de nettoyage en bon état (brosses, raclettes, lavettes propres)"},
+    {ref:"13.6",p:2,text:"Bacs à déchets fermés et évacués régulièrement : pas d'accumulation"},
+    {ref:"13.7",p:1,text:"Absence d'eau stagnante sur les sols de l'atelier de production"},
+    {ref:"13.8",p:2,text:"Nettoyage de fin de production réalisé par le service de nettoyage dédié"},
+  ]},
+];
+
+const pLabel=p=>p===1?"🔴":p===2?"🟠":"⚫";
+const state={};
+const totalCriteria=zones.reduce((s,z)=>s+z.criteria.length,0);
+
+function buildZones(){
+  const c=document.getElementById("zones-container");
+  zones.forEach(z=>{
+    const block=document.createElement("div");
+    block.className="zone-block";
+    block.innerHTML=`<div class="zone-header" onclick="toggleZone(${z.id})">
+      <h2>${z.label}</h2>
+      <div class="zone-badge"><span class="score" id="zscore-${z.id}">0 / ${z.criteria.length}</span><i class="ti ti-chevron-down chevron" id="chev-${z.id}" aria-hidden="true"></i></div>
+    </div>
+    <div class="zone-body" id="zbody-${z.id}">
+      ${z.criteria.map(cr=>`
+        <div class="criterion">
+          <span class="ref">${pLabel(cr.p)} ${cr.ref}</span>
+          <span class="label-text">${cr.text}</span>
+          <div class="radio-group">
+            <button class="radio-btn" onclick="select('${cr.ref}','C')" id="btn-${cr.ref}-C">C</button>
+            <button class="radio-btn" onclick="select('${cr.ref}','NC')" id="btn-${cr.ref}-NC">NC</button>
+            <button class="radio-btn" onclick="select('${cr.ref}','NA')" id="btn-${cr.ref}-NA">NA</button>
+          </div>
+        </div>
+        <div class="criterion" style="padding-top:0;padding-bottom:6px">
+          <span></span>
+          <div class="obs-row" style="grid-column:1/-1">
+            <textarea class="obs-input" rows="1" id="obs-${cr.ref}" placeholder="Observation (facultatif)..." oninput="autoResize(this)"></textarea>
+          </div>
+        </div>
+      `).join("")}
+    </div>`;
+    c.appendChild(block);
+  });
+}
+
+function autoResize(el){el.style.height="auto";el.style.height=el.scrollHeight+"px"}
+
+function toggleZone(id){
+  const body=document.getElementById("zbody-"+id);
+  const chev=document.getElementById("chev-"+id);
+  const open=body.classList.toggle("open");
+  chev.classList.toggle("open",open);
+}
+
+function select(ref,val){
+  state[ref]=val;
+  ["C","NC","NA"].forEach(v=>{
+    const btn=document.getElementById("btn-"+ref+"-"+v);
+    if(btn){btn.className="radio-btn"+(v===val?" sel-"+v:"")}
+  });
+  updateDashboard();
+  updateZoneScore(ref);
+}
+
+function updateZoneScore(ref){
+  const zone=zones.find(z=>z.criteria.some(c=>c.ref===ref));
+  if(!zone)return;
+  const evaluated=zone.criteria.filter(c=>state[c.ref]&&state[c.ref]!=="NA").length;
+  const el=document.getElementById("zscore-"+zone.id);
+  if(el)el.textContent=evaluated+" / "+zone.criteria.length;
+}
+
+function updateDashboard(){
+  const all=zones.flatMap(z=>z.criteria);
+  const evaluated=all.filter(c=>state[c.ref]&&state[c.ref]!=="NA");
+  const C=evaluated.filter(c=>state[c.ref]==="C").length;
+  const NC=evaluated.filter(c=>state[c.ref]==="NC").length;
+  const answered=all.filter(c=>state[c.ref]).length;
+  const pct=evaluated.length>0?Math.round(C/evaluated.length*100):null;
+
+  document.getElementById("d-total").textContent=evaluated.length;
+  document.getElementById("d-c").textContent=C;
+  document.getElementById("d-nc").textContent=NC;
+  document.getElementById("d-pct").textContent=pct!==null?pct+"%":"—";
+
+  const pctEl=document.getElementById("d-pct");
+  pctEl.className="metric-val"+(pct>=80?" green":pct>=60?" amber":" red");
+
+  const progPct=Math.round(answered/totalCriteria*100);
+  document.getElementById("d-prog").textContent=answered+" / "+totalCriteria+" critères";
+  const fill=document.getElementById("prog-fill");
+  fill.style.width=progPct+"%";
+  fill.className="progress-bar-fill"+(progPct>=80?" ok":progPct>=50?" warn":"");
+}
+
+function genSynthesis(){
+  const all=zones.flatMap(z=>z.criteria.map(c=>({...c,zone:z.label})));
+  const evaluated=all.filter(c=>state[c.ref]&&state[c.ref]!=="NA");
+  const C=evaluated.filter(c=>state[c.ref]==="C");
+  const NC=evaluated.filter(c=>state[c.ref]==="NC");
+  const NC1=NC.filter(c=>c.p===1);
+  const NC2=NC.filter(c=>c.p===2);
+  const NC3=NC.filter(c=>c.p===3);
+  const pct=evaluated.length>0?Math.round(C.length/evaluated.length*100):0;
+
+  const date=document.getElementById("date-audit").value||new Date().toLocaleDateString("fr-FR");
+  document.getElementById("synth-date").textContent=date;
+
+  const synthAmels=NC.map(c=>{
+    const suggestions={
+      "1":["Vérifier les EPI à chaque entrée en atelier","Former les opérateurs aux règles BPH de base","Afficher les consignes à l'entrée de l'atelier"],
+      "2":["Identifier et étiqueter tous les produits","Vérifier le respect FIFO","Contrôler les zones de stockage régulièrement"],
+      "3":["Vérifier et enregistrer la température","Contrôler les DLC à chaque utilisation","Nettoyer le réfrigérateur régulièrement"],
+      "4":["Nettoyer les équipements avant utilisation","Enregistrer les lots sur la fiche de production","Identifier tous les bacs"],
+      "5":["Vérifier les enregistrements de production","Isoler et comptabiliser les pertes","Nettoyer entre chaque gamme"],
+      "6":["Maîtriser la durée de refroidissement","Séparer BIO et conventionnel","Nettoyer les supports régulièrement"],
+      "7":["Couvrir les bacs de barquettes","Retirer les barquettes abîmées","Respecter la rotation des barquettes"],
+      "8":["Contrôler le taux O₂ selon PR-QA-012","Vérifier les soudures à chaque lot","Corriger l'étiquetage DLC/DDM"],
+      "9":["Enregistrer les températures 2x/jour","Séparer BIO et conventionnel","Retirer les produits périmés"],
+      "10":["Surélever les cartons","Séparer cartons vides et pleins","Contrôler les nuisibles"],
+      "11":["Enregistrer la température du conteneur","Vérifier la séparation BIO/conventionnel","Contrôler les joints"],
+      "12":["Contrôler la température avant chargement","Nettoyer l'intérieur des camions","Séparer BIO et conventionnel"],
+      "13":["Afficher le plan de nettoyage","Remplir les enregistrements de nettoyage","Stocker produits de nettoyage séparément"],
+    };
+    const zoneId=c.ref.split(".")[0];
+    const sugg=(suggestions[zoneId]||["Corriger ce point rapidement"])[0];
+    return {ref:c.ref,text:c.text,p:c.p,sugg};
+  });
+
+  let html=`<div class="synth-section">
+    <h4>Résultat global</h4>
+    <div class="synth-item ok">Taux de conformité : ${pct}% — ${C.length} conformes sur ${evaluated.length} critères évalués — ${NC.length} non-conformité(s) détectée(s)</div>
+  </div>`;
+
+  if(NC1.length>0){
+    html+=`<div class="synth-section"><h4>🔴 Priorité 1 — À corriger immédiatement (${NC1.length} point(s))</h4>`;
+    NC1.forEach(c=>{
+      const obs=document.getElementById("obs-"+c.ref)?.value;
+      const sugg=synthAmels.find(x=>x.ref===c.ref)?.sugg||"";
+      html+=`<div class="synth-item nc1"><strong>${c.ref}</strong> — ${c.text}${obs?" | Constat : "+obs:""}<br><span style="color:var(--color-text-secondary);font-size:12px">→ ${sugg}</span></div>`;
+    });
+    html+="</div>";
+  }
+  if(NC2.length>0){
+    html+=`<div class="synth-section"><h4>🟠 Priorité 2 — À corriger rapidement (${NC2.length} point(s))</h4>`;
+    NC2.forEach(c=>{
+      const obs=document.getElementById("obs-"+c.ref)?.value;
+      const sugg=synthAmels.find(x=>x.ref===c.ref)?.sugg||"";
+      html+=`<div class="synth-item nc2"><strong>${c.ref}</strong> — ${c.text}${obs?" | Constat : "+obs:""}<br><span style="color:var(--color-text-secondary);font-size:12px">→ ${sugg}</span></div>`;
+    });
+    html+="</div>";
+  }
+  if(NC3.length>0){
+    html+=`<div class="synth-section"><h4>⚫ Priorité 3 — Améliorations à planifier (${NC3.length} point(s))</h4>`;
+    NC3.forEach(c=>{
+      const obs=document.getElementById("obs-"+c.ref)?.value;
+      html+=`<div class="synth-item"><strong>${c.ref}</strong> — ${c.text}${obs?" | Constat : "+obs:""}</div>`;
+    });
+    html+="</div>";
+  }
+  if(NC.length===0){
+    html+=`<div class="synth-section"><div class="synth-item ok">Aucune non-conformité détectée sur les critères évalués. Excellent résultat !</div></div>`;
+  }
+
+  document.getElementById("synth-content").innerHTML=html;
+  document.getElementById("synthesis-block").className="synthesis visible";
+  document.getElementById("synthesis-block").scrollIntoView({behavior:"smooth"});
+}
+
+function exportAudit(){
+  const date=document.getElementById("date-audit").value||"Non renseignée";
+  const auditeur=document.getElementById("auditeur").value||"Non renseigné";
+  const zone=document.getElementById("zone-auditee").value||"Non renseignée";
+  const personnes=document.getElementById("personnes").value||"Non renseignées";
+  const all=zones.flatMap(z=>z.criteria.map(c=>({...c,zone:z.label})));
+  const evaluated=all.filter(c=>state[c.ref]&&state[c.ref]!=="NA");
+  const C=evaluated.filter(c=>state[c.ref]==="C").length;
+  const NC=evaluated.filter(c=>state[c.ref]==="NC");
+  const pct=evaluated.length>0?Math.round(C/evaluated.length*100):0;
+
+  let txt=`GRILLE D'AUDIT BPH — EL-QUA-001 V2.0\nEts LEFEUVRE — ZAC des Radars, 10 Rue Diderot — 91350 GRIGNY\n\n`;
+  txt+=`Date : ${date}\nAuditeur : ${auditeur}\nZone auditée : ${zone}\nPersonnes présentes : ${personnes}\n\n`;
+  txt+=`=== RÉSULTAT GLOBAL ===\n`;
+  txt+=`Critères évalués : ${evaluated.length}\nConformes : ${C}\nNon conformes : ${NC.length}\nTaux de conformité : ${pct}%\n\n`;
+  txt+=`=== NON-CONFORMITÉS DÉTECTÉES ===\n`;
+  if(NC.length===0){txt+="Aucune non-conformité.\n";}
+  else{NC.forEach(c=>{
+    const obs=document.getElementById("obs-"+c.ref)?.value;
+    txt+=`[P${c.p}] ${c.ref} — ${c.text}\n`;
+    if(obs)txt+=`       Constat : ${obs}\n`;
+  });}
+  txt+=`\n=== DÉTAIL PAR CRITÈRE ===\n`;
+  zones.forEach(z=>{
+    txt+=`\n${z.label}\n${"-".repeat(z.label.length)}\n`;
+    z.criteria.forEach(c=>{
+      const v=state[c.ref]||"—";
+      const obs=document.getElementById("obs-"+c.ref)?.value;
+      txt+=`${c.ref} [${v}] ${c.text}${obs?" | "+obs:""}\n`;
+    });
+  });
+
+  const el=document.getElementById("export-text");
+  el.value=txt;
+  el.className="export-text visible";
+  el.scrollIntoView({behavior:"smooth"});
+  el.select();
+  try{document.execCommand("copy");alert("Résultats copiés dans le presse-papiers !");}catch(e){}
+}
+
+function resetAll(){
+  if(!confirm("Réinitialiser toute la grille ? Cette action est irréversible."))return;
+  Object.keys(state).forEach(k=>delete state[k]);
+  zones.forEach(z=>z.criteria.forEach(c=>{
+    ["C","NC","NA"].forEach(v=>{
+      const btn=document.getElementById("btn-"+c.ref+"-"+v);
+      if(btn)btn.className="radio-btn";
+    });
+    const obs=document.getElementById("obs-"+c.ref);
+    if(obs)obs.value="";
+  }));
+  zones.forEach(z=>{
+    const el=document.getElementById("zscore-"+z.id);
+    if(el)el.textContent="0 / "+z.criteria.length;
+  });
+  updateDashboard();
+  document.getElementById("synthesis-block").className="synthesis";
+  document.getElementById("export-text").className="export-text";
+}
+
+buildZones();
+document.getElementById("date-audit").valueAsDate=new Date();
+</script>
