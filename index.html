@@ -64,6 +64,18 @@ body{font-family:var(--font-sans)}
 .export-area{margin-top:1rem}
 .export-text{width:100%;padding:10px;font-size:11px;font-family:var(--font-mono);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);color:var(--color-text-secondary);resize:none;display:none}
 .export-text.visible{display:block}
+
+.zone-badge{gap:8px}
+.btn-photo{font-size:11px;padding:4px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary);white-space:nowrap}
+.btn-photo:hover{background:var(--color-background-secondary)}
+.zone-photos{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;border-top:0.5px solid var(--color-border-tertiary)}
+.photo-thumb{position:relative;width:64px;height:64px;border-radius:var(--border-radius-md);overflow:hidden;border:0.5px solid var(--color-border-secondary)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-thumb .photo-actions{position:absolute;top:2px;right:2px;display:flex;gap:2px}
+.photo-thumb .photo-actions a,.photo-thumb .photo-actions button{font-size:10px;line-height:1;padding:3px 5px;border-radius:3px;border:none;cursor:pointer;background:rgba(0,0,0,.65);color:#fff;text-decoration:none}
+.photo-add{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border:1px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;font-size:22px;color:var(--color-text-secondary);background:transparent}
+.photo-add:hover{background:var(--color-background-secondary)}
+.photo-count{font-size:11px;color:var(--color-text-secondary)}
 </style>
 
 <div class="header">
@@ -74,7 +86,7 @@ body{font-family:var(--font-sans)}
 <div class="meta-grid">
   <div class="meta-field"><label>Date de l'audit</label><input type="date" id="date-audit"></div>
   <div class="meta-field"><label>Zone auditée</label><input type="text" id="zone-auditee" placeholder="Ex : Atelier de production"></div>
-  <div class="meta-field"><label>Auditeur</label><input type="text" id="auditeur" value="Kossi E. Steve ASSOGBA"></div>
+  <div class="meta-field"><label>Auditeur</label><input type="text" id="auditeur" value="Steven ASSOGBA"></div>
   <div class="meta-field"><label>Personnes présentes</label><input type="text" id="personnes" placeholder="Noms des personnes présentes"></div>
 </div>
 
@@ -98,6 +110,7 @@ body{font-family:var(--font-sans)}
 </div>
 
 <div id="zones-container"></div>
+<input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSelected(event)">
 
 <div class="btn-row">
   <button class="btn btn-primary" onclick="genSynthesis()">Générer la synthèse ↗</button>
@@ -177,6 +190,8 @@ const zones=[
     {ref:"5.10",p:2,text:"Nettoyage entre les productions de deux références différentes"},
     {ref:"5.11",p:1,text:"Nettoyage entre production BIO et production conventionnelle sur la même ligne"},
     {ref:"5.12",p:2,text:"Propreté des sols autour des lignes : absence de résidus de pâte ou de produits tombés"},
+    {ref:"5.13",p:2,text:"Propreté des hottes d'aspiration au-dessus des plaques de cuisson (2 hottes par ligne)"},
+    {ref:"5.14",p:1,text:"Propreté de l'intérieur des plaques de cuisson, pas seulement de la surface visible"},
   ]},
   {id:6,label:"Zone 6 — Zone de refroidissement",criteria:[
     {ref:"6.1",p:1,text:"Les produits refroidissent dans une zone propre et protégée des contaminations extérieures"},
@@ -255,6 +270,12 @@ const zones=[
     {ref:"13.7",p:1,text:"Absence d'eau stagnante sur les sols de l'atelier de production"},
     {ref:"13.8",p:2,text:"Nettoyage de fin de production réalisé par le service de nettoyage dédié"},
   ]},
+  {id:14,label:"Zone 14 — Accès, sécurisation et organisation générale de l'atelier",criteria:[
+    {ref:"14.1",p:1,text:"Portes de réception et d'expédition maintenues fermées en dehors des opérations de chargement/déchargement"},
+    {ref:"14.2",p:2,text:"Fenêtres de l'atelier fermées ou protégées (moustiquaires en bon état, absence d'ouverture non contrôlée)"},
+    {ref:"14.3",p:1,text:"Absence d'effets personnels (téléphone, sac, vêtements de ville) en zone de production"},
+    {ref:"14.4",p:2,text:"Organisation générale de l'atelier : plans de travail et sols dégagés, absence d'objets non utiles à la production"},
+  ]},
 ];
 
 const pLabel=p=>p===1?"🔴":p===2?"🟠":"⚫";
@@ -268,9 +289,10 @@ function buildZones(){
     block.className="zone-block";
     block.innerHTML=`<div class="zone-header" onclick="toggleZone(${z.id})">
       <h2>${z.label}</h2>
-      <div class="zone-badge"><span class="score" id="zscore-${z.id}">0 / ${z.criteria.length}</span><i class="ti ti-chevron-down chevron" id="chev-${z.id}" aria-hidden="true"></i></div>
+      <div class="zone-badge"><span class="score" id="zscore-${z.id}">0 / ${z.criteria.length}</span><span class="photo-count" id="pcount-${z.id}"></span><button class="btn-photo" type="button" onclick="event.stopPropagation();triggerPhoto(${z.id})">📷 Photo</button><i class="ti ti-chevron-down chevron" id="chev-${z.id}" aria-hidden="true"></i></div>
     </div>
     <div class="zone-body" id="zbody-${z.id}">
+      <div class="zone-photos" id="zphotos-${z.id}"><div class="photo-add" title="Ajouter une photo" onclick="triggerPhoto(${z.id})">＋</div></div>
       ${z.criteria.map(cr=>`
         <div class="criterion">
           <span class="ref">${pLabel(cr.p)} ${cr.ref}</span>
@@ -371,6 +393,7 @@ function genSynthesis(){
       "11":["Enregistrer la température du conteneur","Vérifier la séparation BIO/conventionnel","Contrôler les joints"],
       "12":["Contrôler la température avant chargement","Nettoyer l'intérieur des camions","Séparer BIO et conventionnel"],
       "13":["Afficher le plan de nettoyage","Remplir les enregistrements de nettoyage","Stocker produits de nettoyage séparément"],
+      "14":["Refermer systématiquement les portes de réception/expédition","Vérifier l'état des protections de fenêtres","Retirer tout effet personnel de l'atelier"],
     };
     const zoneId=c.ref.split(".")[0];
     const sugg=(suggestions[zoneId]||["Corriger ce point rapidement"])[0];
@@ -441,7 +464,8 @@ function exportAudit(){
   });}
   txt+=`\n=== DÉTAIL PAR CRITÈRE ===\n`;
   zones.forEach(z=>{
-    txt+=`\n${z.label}\n${"-".repeat(z.label.length)}\n`;
+    const zp=photos[z.id]||[];
+    txt+=`\n${z.label}${zp.length>0?" ("+zp.length+" photo(s) jointe(s), à exporter depuis l\'application)":""}\n${"-".repeat(z.label.length)}\n`;
     z.criteria.forEach(c=>{
       const v=state[c.ref]||"—";
       const obs=document.getElementById("obs-"+c.ref)?.value;
@@ -477,6 +501,54 @@ function resetAll(){
   document.getElementById("export-text").className="export-text";
 }
 
+
+const photos={};
+let currentPhotoZone=null;
+
+function triggerPhoto(zoneId){
+  currentPhotoZone=zoneId;
+  document.getElementById("photo-input").click();
+}
+
+function handlePhotoSelected(evt){
+  const file=evt.target.files[0];
+  if(!file||currentPhotoZone===null)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    if(!photos[currentPhotoZone])photos[currentPhotoZone]=[];
+    photos[currentPhotoZone].push({data:e.target.result,name:file.name||("zone"+currentPhotoZone+"-"+(photos[currentPhotoZone].length+1)+".jpg")});
+    renderPhotos(currentPhotoZone);
+  };
+  reader.readAsDataURL(file);
+  evt.target.value="";
+}
+
+function renderPhotos(zoneId){
+  const container=document.getElementById("zphotos-"+zoneId);
+  const list=photos[zoneId]||[];
+  const countEl=document.getElementById("pcount-"+zoneId);
+  if(countEl)countEl.textContent=list.length>0?("📷 "+list.length):"";
+  let html="";
+  list.forEach((p,i)=>{
+    html+=`<div class="photo-thumb">
+      <img src="${p.data}" alt="Photo non-conformité">
+      <div class="photo-actions">
+        <a href="${p.data}" download="${p.name}" title="Télécharger">⬇</a>
+        <button type="button" onclick="removePhoto(${zoneId},${i})" title="Supprimer">✕</button>
+      </div>
+    </div>`;
+  });
+  html+=`<div class="photo-add" title="Ajouter une photo" onclick="triggerPhoto(${zoneId})">＋</div>`;
+  container.innerHTML=html;
+}
+
+function removePhoto(zoneId,index){
+  if(!photos[zoneId])return;
+  photos[zoneId].splice(index,1);
+  renderPhotos(zoneId);
+}
+
 buildZones();
+updateDashboard();
 document.getElementById("date-audit").valueAsDate=new Date();
 </script>
